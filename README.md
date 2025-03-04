@@ -40,6 +40,15 @@ The following **additional** features are implemented:
 
 ## Video Walkthrough
 
+<div>
+    <a href="https://www.loom.com/share/7a2a41891dae42c9a806058508e64155">
+      <p>Videos | Library | Loom - 3 March 2025 - Watch Video</p>
+    </a>
+    <a href="https://www.loom.com/share/7a2a41891dae42c9a806058508e64155">
+      <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/7a2a41891dae42c9a806058508e64155-130079ebfb26fa65-full-play.gif">
+    </a>
+  </div>
+
 Here's a walkthrough of implemented user stories:
 
 Here is a reminder on how to embed Loom videos on GitHub. Feel free to remove this reminder once you upload your README. 
