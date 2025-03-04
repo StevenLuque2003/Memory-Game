@@ -1,0 +1,158 @@
+import SwiftUI
+
+// Model for a memory game card
+struct Card: Identifiable, Equatable {
+    let id = UUID()
+    let content: String  // Emoji or image
+    var isFaceUp = false
+    var isMatched = false
+}
+
+struct ContentView: View {
+    @State private var cards: [Card] = []
+    @State private var firstSelectedIndex: Int? = nil
+    @State private var numberOfPairs = 3  // Default pairs
+    @State private var gameCompleted = false
+    @State private var showResetMessage = false
+    
+    let columns = [GridItem(.adaptive(minimum: 100))]
+    
+    var body: some View {
+        VStack {
+            HStack {
+                Picker("Choose Size", selection: $numberOfPairs) {
+                    Text("3 Pairs").tag(3)
+                    Text("6 Pairs").tag(6)
+                    Text("10 Pairs").tag(10)
+                }
+                .pickerStyle(MenuPickerStyle())
+                .padding()
+                .background(Color.orange)
+                .foregroundColor(.white)
+                .cornerRadius(15)
+                .onChange(of: numberOfPairs) { _ in
+                    startNewGame()
+                }
+                
+                Spacer()
+                
+                Button("Reset Game") {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        startNewGame()
+                        showResetMessage = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        showResetMessage = false
+                    }
+                }
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(15)
+            }
+            .padding()
+            
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 15) {
+                    ForEach(cards.indices, id: \..self) { index in
+                        CardView(card: cards[index])
+                            .onTapGesture {
+                                flipCard(at: index)
+                            }
+                            .transition(.scale)
+                    }
+                }
+                .padding()
+            }
+            
+            if showResetMessage {
+                Text("Game has been reset!")
+                    .font(.title)
+                    .foregroundColor(.red)
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.5), value: showResetMessage)
+            }
+        }
+        .onAppear {
+            startNewGame()
+        }
+        .onChange(of: cards) { _ in
+            checkGameCompletion()
+        }
+        .animation(.easeInOut(duration: 0.5), value: cards)
+    }
+    
+    // Start a new game with shuffled cards
+    func startNewGame() {
+        let emojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯"].shuffled()
+        let selectedEmojis = Array(emojis.prefix(numberOfPairs))
+        cards = (selectedEmojis + selectedEmojis).shuffled().map { Card(content: $0) }
+        firstSelectedIndex = nil
+        gameCompleted = false
+    }
+    
+    // Flip a card and check for a match
+    func flipCard(at index: Int) {
+        guard !cards[index].isMatched, index != firstSelectedIndex else { return }
+        
+        cards[index].isFaceUp.toggle()
+        
+        if let firstIndex = firstSelectedIndex {
+            if cards[firstIndex].content == cards[index].content {
+                // Cards match
+                cards[firstIndex].isMatched = true
+                cards[index].isMatched = true
+            } else {
+                // No match, flip them back after delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    cards[firstIndex].isFaceUp = false
+                    cards[index].isFaceUp = false
+                }
+            }
+            firstSelectedIndex = nil
+        } else {
+            firstSelectedIndex = index
+        }
+    }
+    
+    // Check if all cards are matched
+    func checkGameCompletion() {
+        if cards.allSatisfy({ $0.isMatched }) {
+            withAnimation(.easeInOut(duration: 1.0)) {
+                gameCompleted = true
+            }
+        }
+    }
+}
+
+// View for an individual card
+struct CardView: View {
+    let card: Card
+    
+    var body: some View {
+        ZStack {
+            if card.isFaceUp {
+                Text(card.content)
+                    .font(.largeTitle)
+                    .frame(width: 100, height: 130)
+                    .background(Color.white)
+                    .cornerRadius(15)
+                    .shadow(radius: 5)
+            } else {
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.blue)
+                    .frame(width: 100, height: 130)
+                    .shadow(radius: 5)
+            }
+        }
+        .animation(.spring(), value: card.isFaceUp)
+    }
+}
+
+// Preview
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
+
